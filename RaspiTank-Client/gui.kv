@@ -1,0 +1,28 @@
+<MainScreen>:
+	Button:
+		text: '1'
+		size_hint: 1, 0.5
+		pos: (0, 240)
+	Button:
+		size_hint: 1, 0.5
+		text: '2'
+
+<SecondScreen>:
+	Button:
+		text: '2'
+
+<Manager>:
+    id: screen_manager
+
+    screen_main: screen_main
+    screen_second: screen_second
+
+    MainScreen:
+        id: screen_main
+        name: "screen_main"
+        manager: screen_manager
+
+    SecondScreen:
+        id: screen_second
+        name: "screen_second"
+        manager: screen_manager
