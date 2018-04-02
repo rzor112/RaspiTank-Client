@@ -31,6 +31,7 @@
     <Content Include="images\arrow_left.png" />
     <Content Include="images\arrow_right.png" />
     <Content Include="images\arrow_up.png" />
+    <Content Include="images\back.png" />
     <Content Include="images\background.png" />
     <Content Include="images\settings.png" />
     <Content Include="images\stop.png" />

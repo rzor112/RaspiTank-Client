@@ -124,6 +124,7 @@
 				anchor_x: 'left'
 				anchor_y: 'bottom'
 				Button:
+					on_release: root.settings()
 					size_hint: 0.05, 0.75
 					background_color: (0,0,0,0)
 					Image:
@@ -132,8 +133,95 @@
 						center_y: self.parent.center_y
 
 <SecondScreen>:
-	Button:
-		text: '2'
+    canvas.before:
+        Color:
+            rgb: 1, 1, 1
+        Rectangle:
+            pos: self.pos
+            size: self.size
+			source: 'images/background.png'
+
+	AnchorLayout:
+		anchor_x: 'left'
+		anchor_y: 'top'
+		Button:
+			on_release: root.control()
+			size_hint: 0.07, 0.10
+			background_color: (1,1,1,0)
+			Image:
+				source: "images/back.png"
+				center_x: self.parent.center_x
+				center_y: self.parent.center_y
+	BoxLayout:
+		orientation: 'horizontal'
+		
+		BoxLayout:
+			size_hint_x: 0.2
+			orientation: 'vertical'
+
+		BoxLayout:
+			orientation: 'vertical' 
+			size_hint_x: 0.6
+
+			Label:
+				size_hint_y: 0.1
+
+			Label:
+				size_hint_y: 0.1
+				text: 'IP Address:'
+				font_size: '26sp'
+
+			AnchorLayout:
+				anchor_x: 'center'
+				size_hint_y: 0.06
+				TextInput:
+					text: '192.168.0.1'
+					font_size: '22sp'
+					size_hint_x: 0.75
+
+			Label:
+				size_hint_y: 0.15					
+
+			Label:
+				size_hint_y: 0.1
+				text: 'TCP/IP Port:'
+				font_size: '26sp'
+				
+			AnchorLayout:
+				anchor_x: 'center'
+				size_hint_y: 0.06
+				TextInput:
+					text: '5005'
+					font_size: '22sp'
+					size_hint_x: 0.75
+					center_x: self.parent.center_x
+					center_y: self.parent.center_y
+
+			Label:
+				size_hint_y: 0.43
+
+		BoxLayout:
+			size_hint_x: 0.3
+			orientation: 'vertical' 
+			Label:
+				size_hint_y: 0.15
+				text: 'Motor calibration'
+				font_size: '36sp'
+			BoxLayout:
+				size_hint_y: 0.80
+				orientation: 'horizontal'
+				Slider:
+					orientation: 'vertical'
+					min: 0
+					max: 100
+
+				Slider:
+					orientation: 'vertical'
+					min: 0
+					max: 100
+			Label:
+				size_hint_y: 0.05
+
 
 <Manager>:
     id: screen_manager

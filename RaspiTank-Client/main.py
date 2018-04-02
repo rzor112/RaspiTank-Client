@@ -70,8 +70,12 @@ class MainScreen(Screen):
     def stop(self):
         tcp_client.send('{"command": 0, "value": 0}')
 
+    def settings(self):
+        self.manager.current = 'screen_second'
+
 class SecondScreen(Screen):
-    pass
+    def control(self):
+        self.manager.current = 'screen_main'
 
 class Manager(ScreenManager):
     screen_main = ObjectProperty(None)
