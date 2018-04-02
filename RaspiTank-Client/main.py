@@ -3,6 +3,7 @@ from kivy.lang import Builder
 from kivy.config import Config
 from kivy.uix.screenmanager import ScreenManager, Screen, NoTransition, FallOutTransition, FadeTransition
 from kivy.properties import ObjectProperty, NumericProperty
+from kivy.core.window import Window
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.button import Button
 from kivy.uix.boxlayout import BoxLayout 
@@ -14,6 +15,7 @@ import socket, json, time
 
 Config.set('graphics', 'width', '1280')
 Config.set('graphics', 'height', '600')
+Window.size = (1280, 600)
 
 class TCP_Client():
     #settings
@@ -58,9 +60,62 @@ class TCP_Client():
 class MainScreen(Screen):
     connect_button = ObjectProperty(None)
     ping_label = ObjectProperty(None)
+    key_lock = [False, False, False, False]
+
     def __init__(self, **kwargs):
         super(MainScreen, self).__init__(**kwargs)
         Clock.schedule_interval(self.ping, 1)
+        self._keyboard = Window.request_keyboard(self._keyboard_closed, self)
+        self._keyboard.bind(on_key_down=self._on_keyboard_down)
+        self._keyboard.bind(on_key_up=self._on_keyboard_up)
+        self._keyboard.bind()
+
+    def _keyboard_closed(self):
+        self._keyboard.unbind(on_key_down=self._on_keyboard_down)
+        self._keyboard.unbind(on_key_up=self._on_keyboard_up)
+        self._keyboard = Non
+
+    def _on_keyboard_down(self, keyboard, keycode, text, modifiers):
+        if keycode[1] == 'w' or keycode[1] == 'up':
+            if not self.key_lock[0]:
+                self.button_forward()
+                self.key_lock[0] = True
+
+        elif keycode[1] == 's' or keycode[1] == 'down':
+            if not self.key_lock[1]:
+                self.button_back()
+                self.key_lock[1] = True
+
+        elif keycode[1] == 'a' or keycode[1] == 'left':
+            if not self.key_lock[2]:
+                self.button_left()
+                self.key_lock[2] = True
+
+        elif keycode[1] == 'd' or keycode[1] == 'right':
+            if not self.key_lock[3]:
+                self.button_right()
+                self.key_lock[3] = True
+
+        return True
+
+    def _on_keyboard_up(self, keyboard, keycode):
+        if keycode[1] == 'w' or keycode[1] == 'up':
+            self.key_lock[0] = False
+            self.stop()
+
+        elif keycode[1] == 's' or keycode[1] == 'down':
+            self.key_lock[1] = False
+            self.stop()
+
+        elif keycode[1] == 'a' or keycode[1] == 'left':
+            self.key_lock[2] = False
+            self.stop()
+
+        elif keycode[1] == 'd' or keycode[1] == 'right':
+            self.key_lock[3] = False 
+            self.stop()
+
+        return True
 
     def ping(self, *args):
         if tcp_client.connected:
