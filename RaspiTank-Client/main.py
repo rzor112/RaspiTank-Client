@@ -11,11 +11,18 @@ from kivy.uix.label import Label
 from kivy.uix.image import Image
 from kivy.factory import Factory
 from kivy.clock import Clock
+from kivy.graphics.texture import Texture
+import cv2
+import urllib
+import numpy as np
 import socket, json, time
 
 Config.set('graphics', 'width', '1280')
 Config.set('graphics', 'height', '600')
 Window.size = (1280, 600)
+
+stream = urllib.urlopen('http://192.168.0.113:8081/')
+bytes = ''
 
 class TCP_Client():
     #settings
@@ -60,15 +67,33 @@ class TCP_Client():
 class MainScreen(Screen):
     connect_button = ObjectProperty(None)
     ping_label = ObjectProperty(None)
+    camera_box = ObjectProperty(None)
+
     key_lock = [False, False, False, False]
 
     def __init__(self, **kwargs):
         super(MainScreen, self).__init__(**kwargs)
         Clock.schedule_interval(self.ping, 1)
+        Clock.schedule_interval(self.camera, 1.0 / 150)
         self._keyboard = Window.request_keyboard(self._keyboard_closed, self)
         self._keyboard.bind(on_key_down=self._on_keyboard_down)
         self._keyboard.bind(on_key_up=self._on_keyboard_up)
         self._keyboard.bind()
+
+    def camera(self, *args):
+        global bytes
+        bytes += stream.read(1024)
+        a = bytes.find(b'\xff\xd8')
+        b = bytes.find(b'\xff\xd9')
+        if a != -1 and b != -1:
+            jpg = bytes[a:b+2]
+            bytes = bytes[b+2:]
+            frame = cv2.imdecode(np.fromstring(jpg, dtype=np.uint8), cv2.IMREAD_COLOR)
+            buf1 = cv2.flip(frame, 0)
+            buf = buf1.tostring()
+            image_texture = Texture.create(size=(frame.shape[1], frame.shape[0]), colorfmt='bgr')
+            image_texture.blit_buffer(buf, colorfmt='bgr', bufferfmt='ubyte')
+            self.camera_box.texture = image_texture
 
     def _keyboard_closed(self):
         self._keyboard.unbind(on_key_down=self._on_keyboard_down)

@@ -1,6 +1,7 @@
 <MainScreen>:
 	connect_button: con_button
 	ping_label: ping_lbl
+	camera_box: camera_image
     canvas.before:
         Color:
             rgb: 1, 1, 1
@@ -122,8 +123,17 @@
 			BoxLayout:
 				orientation: 'vertical'
 				size_hint_x: 0.405
-				Button:
-					text: 'Camera'
+				AnchorLayout:
+					anchor_x: 'center'
+					anchor_y: 'center'
+					Image:
+						id: camera_image
+						allow_stretch: True
+						keep_ratio: True
+						size_hint_y: None
+						size_hint_x: None
+						width: self.parent.width
+						height: self.parent.width/self.image_ratio
 
 			BoxLayout:
 				orientation: 'vertical'
