@@ -1,13 +1,135 @@
 <MainScreen>:
-	Button:
-		text: '1'
-		size_hint: 1, 0.5
-		pos: (0, 240)
-		on_release: root.button_1()
-	Button:
-		size_hint: 1, 0.5
-		text: '2'
-		on_release: root.button_2()
+    canvas.before:
+        Color:
+            rgb: 1, 1, 1
+        Rectangle:
+            pos: self.pos
+            size: self.size
+			source: 'images/background.png'
+
+	BoxLayout:
+		orientation: 'vertical'
+
+		RelativeLayout:
+			size_hint: 1, 0.13
+
+			AnchorLayout:
+				padding: 10
+				anchor_x: 'left'
+				anchor_y: 'top'
+				Button:
+					canvas:
+						Color:
+							rgba: 1,1,1,1
+						Line:
+							rectangle: self.x, self.y, self.width, self.height
+					background_color: 0,0,0,0
+					text:'Change mode to automatic'
+					size_hint: .17, .65
+
+			AnchorLayout:
+				anchor_x: 'center'
+				anchor_y: 'center'
+				Button:
+					background_color: 0, 1, 0, 1
+					text:'Connect'
+					size_hint: .25, .75
+
+			AnchorLayout:
+				anchor_x: 'right'
+				anchor_y: 'top'
+				Label:
+					text: 'ping: 50ms'
+					size_hint: .07, .26
+
+		BoxLayout:
+			orientation: 'horizontal'
+			size_hint_y: 0.74
+			BoxLayout:
+				orientation: 'vertical'
+				size_hint_x: 0.054
+
+			BoxLayout:
+				orientation: 'vertical'
+				size_hint_x: 0.324
+
+				BoxLayout:
+					orientation: 'horizontal'
+					Button:
+						background_color: (0,0,0,0)
+					Button:
+						background_color: (0,0,0,0)
+						Image:
+							source: "images/arrow_up.png"
+							center_x: self.parent.center_x
+							center_y: self.parent.center_y
+					Button:
+						background_color: (0,0,0,0)
+
+				BoxLayout:
+					orientation: 'horizontal'
+					Button:
+						background_color: (0,0,0,0)
+						Image:
+							source: "images/arrow_left.png"
+							center_x: self.parent.center_x
+							center_y: self.parent.center_y
+					Button:
+						background_color: (0,0,0,0)
+						Image:
+							source: "images/stop.png"
+							center_x: self.parent.center_x
+							center_y: self.parent.center_y
+					Button:
+						background_color: (0,0,0,0)
+						Image:
+							source: "images/arrow_right.png"
+							center_x: self.parent.center_x
+							center_y: self.parent.center_y
+
+				BoxLayout:
+					orientation: 'horizontal'
+					Button:
+						background_color: (0,0,0,0)
+					Button:
+						background_color: (0,0,0,0)
+						Image:
+							source: "images/arrow_down.png"
+							center_x: self.parent.center_x
+							center_y: self.parent.center_y
+					Button:
+						background_color: (0,0,0,0)
+
+			BoxLayout:
+				orientation: 'vertical'
+				size_hint_x: 0.135
+				Slider:
+					orientation: 'vertical'
+					min: 0
+					max: 100
+
+			BoxLayout:
+				orientation: 'vertical'
+				size_hint_x: 0.405
+				Button:
+					text: 'Camera'
+
+			BoxLayout:
+				orientation: 'vertical'
+				size_hint_x: 0.082
+
+		RelativeLayout:
+			size_hint_y: 0.13
+			AnchorLayout:
+				anchor_x: 'left'
+				anchor_y: 'bottom'
+				Button:
+					size_hint: 0.05, 0.75
+					background_color: (0,0,0,0)
+					Image:
+						source: "images/settings.png"
+						center_x: self.parent.center_x
+						center_y: self.parent.center_y
 
 <SecondScreen>:
 	Button:

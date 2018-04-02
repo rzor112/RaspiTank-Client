@@ -27,6 +27,16 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="gui.kv" />
+    <Content Include="images\arrow_down.png" />
+    <Content Include="images\arrow_left.png" />
+    <Content Include="images\arrow_right.png" />
+    <Content Include="images\arrow_up.png" />
+    <Content Include="images\background.png" />
+    <Content Include="images\settings.png" />
+    <Content Include="images\stop.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="images\" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
   <!-- Uncomment the CoreCompile target to enable the Build command in

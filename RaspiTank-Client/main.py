@@ -12,27 +12,63 @@ from kivy.factory import Factory
 from kivy.clock import Clock
 import socket 
 
-Config.set('graphics', 'width', '800')
-Config.set('graphics', 'height', '480')
+Config.set('graphics', 'width', '1280')
+Config.set('graphics', 'height', '600')
 
-def tcp_send(data):
-    TCP_IP = '192.168.0.115'
+class TCP_Client():
+    #settings
+    TCP_IP = '192.168.0.111'
     TCP_PORT = 5005
     BUFFER_SIZE = 1024
-    MESSAGE = data
 
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.connect((TCP_IP, TCP_PORT))
-    s.send(MESSAGE)
-    data = s.recv(BUFFER_SIZE)
-    s.close()
+    #status
+    connected = False
+
+    def connect(self):
+        try:
+            self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            self.s.connect((self.TCP_IP, self.TCP_PORT))
+            self.connected = True
+        except Exception as e:
+            self.connected = False
+            print e
+
+    def disconnect(self):
+        try:
+            self.s.close()
+            self.connected = False
+        except Exception as e:
+            self.connected = False
+            print e
+
+    def send(self, MESSAGE):
+        try:
+            if self.connected:
+                self.s.send(MESSAGE)
+                data = self.s.recv(self.BUFFER_SIZE)
+            else:
+                print 'You are not connected!'
+        except Exception as e:
+            print e
 
 class MainScreen(Screen):
-    def button_1(self):
-        tcp_send('on')
+    def button_forward(self):
+        tcp_client.send('{"command": 1, "value": 0}')
 
-    def button_2(self):
-        tcp_send('off')
+    def button_back(self):
+        tcp_client.send('{"command": 4, "value": 0}')
+
+    def button_left(self):
+        tcp_client.send('{"command": 3, "value": 0}')
+
+    def button_right(self):
+        tcp_client.send('{"command": 2, "value": 0}')
+
+    def button_disconnect(self):
+        tcp_client.disconnect()
+
+    def stop(self):
+        tcp_client.send('{"command": 0, "value": 0}')
 
 class SecondScreen(Screen):
     pass
@@ -47,6 +83,9 @@ m = Manager(transition=FadeTransition())
 class SimpleKivy(App):
     def build(self):
         return m
+
+tcp_client = TCP_Client()
+tcp_client.connect()
 
 if __name__ == "__main__":
     SimpleKivy().run()
