@@ -10,14 +10,14 @@ from kivy.uix.label import Label
 from kivy.uix.image import Image
 from kivy.factory import Factory
 from kivy.clock import Clock
-import socket 
+import socket, json, time
 
 Config.set('graphics', 'width', '1280')
 Config.set('graphics', 'height', '600')
 
 class TCP_Client():
     #settings
-    TCP_IP = '192.168.0.111'
+    TCP_IP = '192.168.0.113'
     TCP_PORT = 5005
     BUFFER_SIZE = 1024
 
@@ -46,29 +46,64 @@ class TCP_Client():
             if self.connected:
                 self.s.send(MESSAGE)
                 data = self.s.recv(self.BUFFER_SIZE)
+                return json.loads(data)
             else:
                 print 'You are not connected!'
+                return None
         except Exception as e:
             print e
+            return None
+
 
 class MainScreen(Screen):
+    connect_button = ObjectProperty(None)
+    ping_label = ObjectProperty(None)
+    def __init__(self, **kwargs):
+        super(MainScreen, self).__init__(**kwargs)
+        Clock.schedule_interval(self.ping, 1)
+
+    def ping(self, *args):
+        if tcp_client.connected:
+            saved_time = time.time()
+            data = tcp_client.send('{"command": 255, "value": 0}')
+            if data and data['data']['command'] == 0xff:
+                ping_time = int((time.time() - saved_time) * 1000)
+                self.ping_label.text= "ping: " + str(ping_time) + "ms"
+
     def button_forward(self):
-        tcp_client.send('{"command": 1, "value": 0}')
+        if tcp_client.connected:
+            tcp_client.send('{"command": 1, "value": 0}')
 
     def button_back(self):
-        tcp_client.send('{"command": 4, "value": 0}')
+        if tcp_client.connected:
+            tcp_client.send('{"command": 2, "value": 0}')
 
     def button_left(self):
-        tcp_client.send('{"command": 3, "value": 0}')
+        if tcp_client.connected:
+            tcp_client.send('{"command": 3, "value": 0}')
 
     def button_right(self):
-        tcp_client.send('{"command": 2, "value": 0}')
+        if tcp_client.connected:
+            tcp_client.send('{"command": 4, "value": 0}')
 
     def button_disconnect(self):
-        tcp_client.disconnect()
+        if tcp_client.connected:
+            tcp_client.disconnect()
 
     def stop(self):
-        tcp_client.send('{"command": 0, "value": 0}')
+        if tcp_client.connected:
+            tcp_client.send('{"command": 0, "value": 0}')
+
+    def connect(self):
+        if tcp_client.connected:
+            tcp_client.disconnect()
+            self.connect_button.background_color = (0,1,0,1)
+            self.connect_button.text = 'CONNECT'
+            self.ping_label.text = ""
+        else:
+            tcp_client.connect()
+            self.connect_button.background_color = (1,0,0,1)
+            self.connect_button.text = 'DISCONNECT'
 
     def settings(self):
         self.manager.current = 'screen_second'
@@ -89,7 +124,6 @@ class SimpleKivy(App):
         return m
 
 tcp_client = TCP_Client()
-tcp_client.connect()
 
 if __name__ == "__main__":
     SimpleKivy().run()

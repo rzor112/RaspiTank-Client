@@ -1,4 +1,6 @@
 <MainScreen>:
+	connect_button: con_button
+	ping_label: ping_lbl
     canvas.before:
         Color:
             rgb: 1, 1, 1
@@ -9,7 +11,6 @@
 
 	BoxLayout:
 		orientation: 'vertical'
-
 		RelativeLayout:
 			size_hint: 1, 0.13
 
@@ -31,15 +32,17 @@
 				anchor_x: 'center'
 				anchor_y: 'center'
 				Button:
+					id: con_button
 					background_color: 0, 1, 0, 1
-					text:'Connect'
+					text:'CONNECT'
 					size_hint: .25, .75
+					on_release: root.connect()
 
 			AnchorLayout:
 				anchor_x: 'right'
 				anchor_y: 'top'
 				Label:
-					text: 'ping: 50ms'
+					id: ping_lbl
 					size_hint: .07, .26
 
 		BoxLayout:
@@ -58,6 +61,8 @@
 					Button:
 						background_color: (0,0,0,0)
 					Button:
+						on_press: root.button_forward()
+						on_release: root.stop()
 						background_color: (0,0,0,0)
 						Image:
 							source: "images/arrow_up.png"
@@ -70,6 +75,8 @@
 					orientation: 'horizontal'
 					Button:
 						background_color: (0,0,0,0)
+						on_press: root.button_left()
+						on_release: root.stop()
 						Image:
 							source: "images/arrow_left.png"
 							center_x: self.parent.center_x
@@ -82,6 +89,8 @@
 							center_y: self.parent.center_y
 					Button:
 						background_color: (0,0,0,0)
+						on_press: root.button_right()
+						on_release: root.stop()
 						Image:
 							source: "images/arrow_right.png"
 							center_x: self.parent.center_x
@@ -93,7 +102,9 @@
 						background_color: (0,0,0,0)
 					Button:
 						background_color: (0,0,0,0)
-						Image:
+						on_press: root.button_back()
+						on_release: root.stop()
+						Image:	
 							source: "images/arrow_down.png"
 							center_x: self.parent.center_x
 							center_y: self.parent.center_y
