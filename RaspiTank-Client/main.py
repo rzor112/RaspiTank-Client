@@ -18,9 +18,6 @@ Config.set('graphics', 'width', '1280')
 Config.set('graphics', 'height', '600')
 Window.size = (1280, 600)
 
-stream = urllib.urlopen('http://192.168.0.113:8081/')
-bytes = ''
-
 class Saved_Data():
     def __init__(self):
         self.connection = sqlite3.connect('data.db')
@@ -71,11 +68,11 @@ class Saved_Data():
         self.connection.commit()
 
     def save_tcp_port(self, value):
-        self.cursor.execute("UPDATE data SET value='%s' WHERE name='camera_port'" % str(value))
+        self.cursor.execute("UPDATE data SET value='%s' WHERE name='tcp_port'" % str(value))
         self.connection.commit()
 
     def save_camera_port(self, value):
-        self.cursor.execute("UPDATE data SET value='%s' WHERE name='tcp_port'" % str(value))
+        self.cursor.execute("UPDATE data SET value='%s' WHERE name='camera_port'" % str(value))
         self.connection.commit()
 
 class TCP_Client():
@@ -128,8 +125,10 @@ class MainScreen(Screen):
     camera_box = ObjectProperty(None)
     speed_slider = ObjectProperty(None)
 
+    connected = False
     key_lock = [False, False, False, False]
     disconnect_camera_texture = Image(source = 'images/off_camera.png').texture
+    bytes = ''
 
     def __init__(self, **kwargs):
         super(MainScreen, self).__init__(**kwargs)
@@ -140,15 +139,20 @@ class MainScreen(Screen):
         self._keyboard.bind(on_key_up=self._on_keyboard_up)
         self._keyboard.bind()
 
+    def on_enter(self):
+        if not tcp_client.connected:
+            self.address = ('http://' + str(saved_data.get_ip()) + ':' + str(saved_data.get_camera_port()) + '/')
+            tcp_client.TCP_IP = str(saved_data.get_ip())
+            tcp_client.TCP_PORT = int(saved_data.get_tcp_port())
+
     def camera(self, *args):
         if tcp_client.connected:
-            global bytes
-            bytes += stream.read(1024)
-            a = bytes.find(b'\xff\xd8')
-            b = bytes.find(b'\xff\xd9')
+            self.bytes += self.stream.read(1024)
+            a = self.bytes.find(b'\xff\xd8')
+            b = self.bytes.find(b'\xff\xd9')
             if a != -1 and b != -1:
-                jpg = bytes[a:b+2]
-                bytes = bytes[b+2:]
+                jpg = self.bytes[a:b+2]
+                self.bytes = self.bytes[b+2:]
                 frame = cv2.imdecode(np.fromstring(jpg, dtype=np.uint8), cv2.IMREAD_COLOR)
                 buf1 = cv2.flip(frame, 0)
                 buf = buf1.tostring()
@@ -213,6 +217,7 @@ class MainScreen(Screen):
                 ping_time = int((time.time() - saved_time) * 1000)
                 self.ping_label.text= "ping: " + str(ping_time) + "ms"
 
+
     def button_forward(self):
         if tcp_client.connected:
             tcp_client.send(0x01, 0x00)
@@ -247,18 +252,36 @@ class MainScreen(Screen):
             self.connect_button.background_color = (0,1,0,1)
             self.connect_button.text = 'CONNECT'
             self.ping_label.text = ""
+            self.connected = False
         else:
+            self.stream = urllib.urlopen(self.address)
             tcp_client.connect()
             self.connect_button.background_color = (1,0,0,1)
             self.connect_button.text = 'DISCONNECT'
             self.speed_slider.value = tcp_client.send(0xa0, 0x00)['value']
+            self.connected = True
 
     def settings(self):
         self.manager.current = 'screen_second'
 
 class SecondScreen(Screen):
+    textinput_ip = ObjectProperty(None)
+    textinput_tcp = ObjectProperty(None)
+    textinput_camera = ObjectProperty(None)
+
     def control(self):
         self.manager.current = 'screen_main'
+        saved_data.save_ip(self.textinput_ip.text)
+        saved_data.save_tcp_port(self.textinput_tcp.text)
+        saved_data.save_camera_port(self.textinput_camera.text)
+
+    def on_enter(self):
+        self.textinput_ip.text = saved_data.get_ip()
+        self.textinput_tcp.text = saved_data.get_tcp_port()
+        self.textinput_camera.text = saved_data.get_camera_port()
+
+saved_data = Saved_Data()
+tcp_client = TCP_Client()
 
 class Manager(ScreenManager):
     screen_main = ObjectProperty(None)
@@ -271,8 +294,7 @@ class SimpleKivy(App):
     def build(self):
         return m
 
-tcp_client = TCP_Client()
-saved_data = Saved_Data()
+
 
 if __name__ == "__main__":
     SimpleKivy().run()
