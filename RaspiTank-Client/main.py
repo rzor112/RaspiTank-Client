@@ -134,12 +134,12 @@ class MainScreen(Screen):
         super(MainScreen, self).__init__(**kwargs)
         Clock.schedule_interval(self.ping, 1)
         Clock.schedule_interval(self.camera, 1.0/100)
+
+    def on_enter(self):
         self._keyboard = Window.request_keyboard(self._keyboard_closed, self)
         self._keyboard.bind(on_key_down=self._on_keyboard_down)
         self._keyboard.bind(on_key_up=self._on_keyboard_up)
         self._keyboard.bind()
-
-    def on_enter(self):
         if not tcp_client.connected:
             self.address = ('http://' + str(saved_data.get_ip()) + ':' + str(saved_data.get_camera_port()) + '/')
             tcp_client.TCP_IP = str(saved_data.get_ip())
@@ -268,6 +268,8 @@ class SecondScreen(Screen):
     textinput_ip = ObjectProperty(None)
     textinput_tcp = ObjectProperty(None)
     textinput_camera = ObjectProperty(None)
+    slider_motor_left = ObjectProperty(None)
+    slider_motor_right = ObjectProperty(None)
 
     def control(self):
         self.manager.current = 'screen_main'
@@ -279,6 +281,19 @@ class SecondScreen(Screen):
         self.textinput_ip.text = saved_data.get_ip()
         self.textinput_tcp.text = saved_data.get_tcp_port()
         self.textinput_camera.text = saved_data.get_camera_port()
+
+        if tcp_client.connected:
+            self.slider_motor_left.value = tcp_client.send(0xa1, 0x00)['value']
+            self.slider_motor_right.value = tcp_client.send(0xa2, 0x00)['value']
+
+    def left_slider(self, value):
+        if tcp_client.connected:
+            tcp_client.send(0x06, int(value))
+
+    def right_slider(self, value):
+        if tcp_client.connected:
+            tcp_client.send(0x07, int(value))
+
 
 saved_data = Saved_Data()
 tcp_client = TCP_Client()

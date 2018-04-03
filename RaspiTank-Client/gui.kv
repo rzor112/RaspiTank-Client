@@ -160,6 +160,8 @@
 	textinput_ip: text_input_ip
 	textinput_tcp: text_input_tcp
 	textinput_camera: text_input_cam
+	slider_motor_left: slider_m_left
+	slider_motor_right: slider_m_right
 
     canvas.before:
         Color:
@@ -260,11 +262,15 @@
 				size_hint_y: 0.80
 				orientation: 'horizontal'
 				Slider:
+					id: slider_m_left
+					on_touch_up: root.left_slider(self.value)
 					orientation: 'vertical'
 					min: 0
 					max: 100
 
 				Slider:
+					id: slider_m_right
+					on_touch_up: root.right_slider(self.value)
 					orientation: 'vertical'
 					min: 0
 					max: 100
