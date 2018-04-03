@@ -12,10 +12,7 @@ from kivy.uix.image import Image
 from kivy.factory import Factory
 from kivy.clock import Clock
 from kivy.graphics.texture import Texture
-import cv2
-import urllib
-import numpy as np
-import socket, json, time
+import socket, json, time, sqlite3, urllib, cv2, numpy as np
 
 Config.set('graphics', 'width', '1280')
 Config.set('graphics', 'height', '600')
@@ -23,6 +20,63 @@ Window.size = (1280, 600)
 
 stream = urllib.urlopen('http://192.168.0.113:8081/')
 bytes = ''
+
+class Saved_Data():
+    def __init__(self):
+        self.connection = sqlite3.connect('data.db')
+        self.cursor = self.connection.cursor()
+        self.cursor.execute("CREATE TABLE IF NOT EXISTS data(name TEXT, value TEXT)")
+        print 'Saved IP: ' + str(self.get_ip())
+        print 'Saved TCP/IP port: ' + str(self.get_tcp_port())
+        print 'Saved camera port: ' + str(self.get_camera_port())
+
+    def get_ip(self):
+        data = self.cursor.execute('SELECT value FROM data WHERE name="ip"')
+        to_return = None
+        for x in data:
+            to_return = x[0]
+        if to_return: 
+            return to_return
+        else:
+            self.cursor.execute("INSERT INTO data VALUES ('ip','0.0.0.0')")
+            self.connection.commit()
+            return self.get_ip()
+
+    def get_tcp_port(self):
+        data = self.cursor.execute('SELECT value FROM data WHERE name="tcp_port"')
+        to_return = None
+        for x in data:
+            to_return = x[0]
+        if to_return: 
+            return to_return
+        else:
+            self.cursor.execute("INSERT INTO data VALUES ('tcp_port','0000')")
+            self.connection.commit()
+            return self.get_tcp_port()
+
+    def get_camera_port(self):
+        data = self.cursor.execute('SELECT value FROM data WHERE name="camera_port"')
+        to_return = None
+        for x in data:
+            to_return = x[0]
+        if to_return: 
+            return to_return
+        else:
+            self.cursor.execute("INSERT INTO data VALUES ('camera_port','0000')")
+            self.connection.commit()
+            return self.get_camera_port()
+
+    def save_ip(self, value):
+        self.cursor.execute("UPDATE data SET value='%s' WHERE name='ip'" % str(value))
+        self.connection.commit()
+
+    def save_tcp_port(self, value):
+        self.cursor.execute("UPDATE data SET value='%s' WHERE name='camera_port'" % str(value))
+        self.connection.commit()
+
+    def save_camera_port(self, value):
+        self.cursor.execute("UPDATE data SET value='%s' WHERE name='tcp_port'" % str(value))
+        self.connection.commit()
 
 class TCP_Client():
     #settings
@@ -68,7 +122,6 @@ class TCP_Client():
             print e
             return None
 
-
 class MainScreen(Screen):
     connect_button = ObjectProperty(None)
     ping_label = ObjectProperty(None)
@@ -108,7 +161,7 @@ class MainScreen(Screen):
     def _keyboard_closed(self):
         self._keyboard.unbind(on_key_down=self._on_keyboard_down)
         self._keyboard.unbind(on_key_up=self._on_keyboard_up)
-        self._keyboard = Non
+        self._keyboard = None
 
     def _on_keyboard_down(self, keyboard, keycode, text, modifiers):
         if keycode[1] == 'w' or keycode[1] == 'up':
@@ -219,6 +272,7 @@ class SimpleKivy(App):
         return m
 
 tcp_client = TCP_Client()
+saved_data = Saved_Data()
 
 if __name__ == "__main__":
     SimpleKivy().run()

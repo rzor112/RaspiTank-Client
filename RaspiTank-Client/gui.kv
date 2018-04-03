@@ -222,7 +222,25 @@
 					center_y: self.parent.center_y
 
 			Label:
-				size_hint_y: 0.43
+				size_hint_y: 0.15
+
+			Label:
+				size_hint_y: 0.1
+				text: 'Camera Port:'
+				font_size: '26sp'
+
+			AnchorLayout:
+				anchor_x: 'center'
+				size_hint_y: 0.06
+				TextInput:
+					text: '8081'
+					font_size: '22sp'
+					size_hint_x: 0.75
+					center_x: self.parent.center_x
+					center_y: self.parent.center_y
+
+			Label:
+				size_hint_y: 0.12
 
 		BoxLayout:
 			size_hint_x: 0.3
