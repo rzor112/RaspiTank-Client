@@ -50,12 +50,17 @@ class TCP_Client():
             self.connected = False
             print e
 
-    def send(self, MESSAGE):
+    def send(self, command, value):
         try:
             if self.connected:
-                self.s.send(MESSAGE)
+                msg = {'command': int(command), 'value': int(value)}
+                self.s.send(json.dumps(msg))
                 data = self.s.recv(self.BUFFER_SIZE)
-                return json.loads(data)
+                data = json.loads(data)
+                if data['ResponseStatus'] and data['data']['command'] == command:
+                    return data['data']
+                else:
+                    return None
             else:
                 print 'You are not connected!'
                 return None
@@ -68,32 +73,37 @@ class MainScreen(Screen):
     connect_button = ObjectProperty(None)
     ping_label = ObjectProperty(None)
     camera_box = ObjectProperty(None)
+    speed_slider = ObjectProperty(None)
 
     key_lock = [False, False, False, False]
+    disconnect_camera_texture = Image(source = 'images/off_camera.png').texture
 
     def __init__(self, **kwargs):
         super(MainScreen, self).__init__(**kwargs)
         Clock.schedule_interval(self.ping, 1)
-        Clock.schedule_interval(self.camera, 1.0 / 150)
+        Clock.schedule_interval(self.camera, 1.0/100)
         self._keyboard = Window.request_keyboard(self._keyboard_closed, self)
         self._keyboard.bind(on_key_down=self._on_keyboard_down)
         self._keyboard.bind(on_key_up=self._on_keyboard_up)
         self._keyboard.bind()
 
     def camera(self, *args):
-        global bytes
-        bytes += stream.read(1024)
-        a = bytes.find(b'\xff\xd8')
-        b = bytes.find(b'\xff\xd9')
-        if a != -1 and b != -1:
-            jpg = bytes[a:b+2]
-            bytes = bytes[b+2:]
-            frame = cv2.imdecode(np.fromstring(jpg, dtype=np.uint8), cv2.IMREAD_COLOR)
-            buf1 = cv2.flip(frame, 0)
-            buf = buf1.tostring()
-            image_texture = Texture.create(size=(frame.shape[1], frame.shape[0]), colorfmt='bgr')
-            image_texture.blit_buffer(buf, colorfmt='bgr', bufferfmt='ubyte')
-            self.camera_box.texture = image_texture
+        if tcp_client.connected:
+            global bytes
+            bytes += stream.read(1024)
+            a = bytes.find(b'\xff\xd8')
+            b = bytes.find(b'\xff\xd9')
+            if a != -1 and b != -1:
+                jpg = bytes[a:b+2]
+                bytes = bytes[b+2:]
+                frame = cv2.imdecode(np.fromstring(jpg, dtype=np.uint8), cv2.IMREAD_COLOR)
+                buf1 = cv2.flip(frame, 0)
+                buf = buf1.tostring()
+                image_texture = Texture.create(size=(frame.shape[1], frame.shape[0]), colorfmt='bgr')
+                image_texture.blit_buffer(buf, colorfmt='bgr', bufferfmt='ubyte')
+                self.camera_box.texture = image_texture
+        else:
+            self.camera_box.texture = self.disconnect_camera_texture
 
     def _keyboard_closed(self):
         self._keyboard.unbind(on_key_down=self._on_keyboard_down)
@@ -145,26 +155,26 @@ class MainScreen(Screen):
     def ping(self, *args):
         if tcp_client.connected:
             saved_time = time.time()
-            data = tcp_client.send('{"command": 255, "value": 0}')
-            if data and data['data']['command'] == 0xff:
+            data = tcp_client.send(0xff, 0x00)
+            if data:
                 ping_time = int((time.time() - saved_time) * 1000)
                 self.ping_label.text= "ping: " + str(ping_time) + "ms"
 
     def button_forward(self):
         if tcp_client.connected:
-            tcp_client.send('{"command": 1, "value": 0}')
+            tcp_client.send(0x01, 0x00)
 
     def button_back(self):
         if tcp_client.connected:
-            tcp_client.send('{"command": 2, "value": 0}')
+            tcp_client.send(0x02, 0x00)
 
     def button_left(self):
         if tcp_client.connected:
-            tcp_client.send('{"command": 3, "value": 0}')
+            tcp_client.send(0x03, 0x00)
 
     def button_right(self):
         if tcp_client.connected:
-            tcp_client.send('{"command": 4, "value": 0}')
+            tcp_client.send(0x04, 0x00)
 
     def button_disconnect(self):
         if tcp_client.connected:
@@ -172,7 +182,11 @@ class MainScreen(Screen):
 
     def stop(self):
         if tcp_client.connected:
-            tcp_client.send('{"command": 0, "value": 0}')
+            tcp_client.send(0x00, 0x00)
+
+    def set_veliocity(self, value):
+        if tcp_client.connected:
+            tcp_client.send(0x05, value)
 
     def connect(self):
         if tcp_client.connected:
@@ -184,6 +198,7 @@ class MainScreen(Screen):
             tcp_client.connect()
             self.connect_button.background_color = (1,0,0,1)
             self.connect_button.text = 'DISCONNECT'
+            self.speed_slider.value = tcp_client.send(0xa0, 0x00)['value']
 
     def settings(self):
         self.manager.current = 'screen_second'

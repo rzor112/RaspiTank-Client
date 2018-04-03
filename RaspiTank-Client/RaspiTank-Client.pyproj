@@ -33,6 +33,7 @@
     <Content Include="images\arrow_up.png" />
     <Content Include="images\back.png" />
     <Content Include="images\background.png" />
+    <Content Include="images\off_camera.png" />
     <Content Include="images\settings.png" />
     <Content Include="images\stop.png" />
   </ItemGroup>

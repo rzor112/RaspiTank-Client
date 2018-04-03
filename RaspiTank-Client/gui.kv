@@ -1,4 +1,5 @@
 <MainScreen>:
+	speed_slider: spd_slider
 	connect_button: con_button
 	ping_label: ping_lbl
 	camera_box: camera_image
@@ -116,6 +117,8 @@
 				orientation: 'vertical'
 				size_hint_x: 0.135
 				Slider:
+					id: spd_slider
+					on_touch_up: root.set_veliocity(self.value)
 					orientation: 'vertical'
 					min: 0
 					max: 100
