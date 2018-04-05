@@ -277,6 +277,21 @@
 			Label:
 				size_hint_y: 0.05
 
+<Error_pop>:
+	error_text: err_text
+	size_hint: (0.4, 0.6)
+	title: "Error"
+	BoxLayout:
+		orientation: 'vertical'
+		Label:
+			size_hint_y: 0.7
+			id: err_text
+			font_size: '32sp'
+		Button:
+			size_hint_y: 0.3
+			text: 'Cancel'
+			font_size: '26sp'
+			on_release: root.dismiss()
 
 <Manager>:
     id: screen_manager

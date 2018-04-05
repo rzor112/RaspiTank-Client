@@ -12,7 +12,8 @@ from kivy.uix.image import Image
 from kivy.factory import Factory
 from kivy.clock import Clock
 from kivy.graphics.texture import Texture
-import socket, json, time, sqlite3, urllib, cv2, numpy as np
+from kivy.uix.popup import Popup
+import socket, json, time, sqlite3, urllib2, cv2, numpy as np
 
 Config.set('graphics', 'width', '1280')
 Config.set('graphics', 'height', '600')
@@ -76,22 +77,15 @@ class Saved_Data():
         self.connection.commit()
 
 class TCP_Client():
-    #settings
     TCP_IP = '192.168.0.113'
     TCP_PORT = 5005
     BUFFER_SIZE = 1024
-
-    #status
     connected = False
 
     def connect(self):
-        try:
-            self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            self.s.connect((self.TCP_IP, self.TCP_PORT))
-            self.connected = True
-        except Exception as e:
-            self.connected = False
-            print e
+        self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.s.connect((self.TCP_IP, self.TCP_PORT))
+        self.connected = True
 
     def disconnect(self):
         try:
@@ -102,21 +96,13 @@ class TCP_Client():
             print e
 
     def send(self, command, value):
-        try:
-            if self.connected:
-                msg = {'command': int(command), 'value': int(value)}
-                self.s.send(json.dumps(msg))
-                data = self.s.recv(self.BUFFER_SIZE)
-                data = json.loads(data)
-                if data['ResponseStatus'] and data['data']['command'] == command:
-                    return data['data']
-                else:
-                    return None
-            else:
-                print 'You are not connected!'
-                return None
-        except Exception as e:
-            print e
+        msg = {'command': int(command), 'value': int(value)}
+        self.s.send(json.dumps(msg))
+        data = self.s.recv(self.BUFFER_SIZE)
+        data = json.loads(data)
+        if data['ResponseStatus'] and data['data']['command'] == command:
+            return data['data']
+        else:
             return None
 
 class MainScreen(Screen):
@@ -217,7 +203,6 @@ class MainScreen(Screen):
                 ping_time = int((time.time() - saved_time) * 1000)
                 self.ping_label.text= "ping: " + str(ping_time) + "ms"
 
-
     def button_forward(self):
         if tcp_client.connected:
             tcp_client.send(0x01, 0x00)
@@ -254,12 +239,22 @@ class MainScreen(Screen):
             self.ping_label.text = ""
             self.connected = False
         else:
-            self.stream = urllib.urlopen(self.address)
-            tcp_client.connect()
-            self.connect_button.background_color = (1,0,0,1)
-            self.connect_button.text = 'DISCONNECT'
-            self.speed_slider.value = tcp_client.send(0xa0, 0x00)['value']
-            self.connected = True
+            try:
+                self.stream = urllib2.urlopen(self.address, timeout = 2)
+                try:
+                    tcp_client.connect()
+                    self.connect_button.background_color = (1,0,0,1)
+                    self.connect_button.text = 'DISCONNECT'
+                    self.speed_slider.value = tcp_client.send(0xa0, 0x00)['value']
+                    self.connected = True
+                except: 
+                    error_pop = Error_pop()
+                    error_pop.open()
+                    error_pop.set_error_text("Can't connect with TCP/IP server")
+            except:
+                error_pop = Error_pop()
+                error_pop.open()
+                error_pop.set_error_text("Can't open camera stream")
 
     def settings(self):
         self.manager.current = 'screen_second'
@@ -272,10 +267,56 @@ class SecondScreen(Screen):
     slider_motor_right = ObjectProperty(None)
 
     def control(self):
-        self.manager.current = 'screen_main'
-        saved_data.save_ip(self.textinput_ip.text)
-        saved_data.save_tcp_port(self.textinput_tcp.text)
-        saved_data.save_camera_port(self.textinput_camera.text)
+        correct_error = False 
+        try:
+            tmp_ip = self.textinput_ip.text.split('.')
+            error = False
+            for x in tmp_ip:
+                if int(x) > 255 or int(x) < 0:
+                    error = True
+            if error:
+                error_pop = Error_pop()
+                error_pop.open()
+                error_pop.set_error_text("Incorrect IP address")
+                correct_error = True
+            else:
+                saved_data.save_ip(self.textinput_ip.text)
+        except:
+            error_pop = Error_pop()
+            error_pop.open()
+            error_pop.set_error_text("Incorrect IP address")
+            correct_error = True
+
+        try:
+            if int(self.textinput_tcp.text) > 65535 or int(self.textinput_tcp.text) < 0:
+                error_pop = Error_pop()
+                error_pop.open()
+                error_pop.set_error_text("Incorrect TCP/IP server port")
+                correct_error = True
+            else:
+                saved_data.save_tcp_port(self.textinput_tcp.text)
+        except:
+            error_pop = Error_pop()
+            error_pop.open()
+            error_pop.set_error_text("Incorrect TCP/IP server port")
+            correct_error = True
+
+        try:
+            if int(self.textinput_camera.text) > 65535 or int(self.textinput_camera.text) < 0:
+                error_pop = Error_pop()
+                error_pop.open()
+                error_pop.set_error_text("Incorrect camera port")
+                correct_error = True
+            else:
+                saved_data.save_camera_port(self.textinput_camera.text)
+        except:
+            error_pop = Error_pop()
+            error_pop.open()
+            error_pop.set_error_text("Incorrect camera port")
+            correct_error = True
+
+        if not correct_error:
+            self.manager.current = 'screen_main'
 
     def on_enter(self):
         self.textinput_ip.text = saved_data.get_ip()
@@ -294,6 +335,11 @@ class SecondScreen(Screen):
         if tcp_client.connected:
             tcp_client.send(0x07, int(value))
 
+class Error_pop(Popup):
+    error_text = ObjectProperty(None)
+    def set_error_text(self, text):
+        self.error_text.text = text   
+
 
 saved_data = Saved_Data()
 tcp_client = TCP_Client()
@@ -308,8 +354,6 @@ m = Manager(transition=FadeTransition())
 class SimpleKivy(App):
     def build(self):
         return m
-
-
 
 if __name__ == "__main__":
     SimpleKivy().run()
