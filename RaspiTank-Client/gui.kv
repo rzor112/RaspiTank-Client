@@ -3,6 +3,8 @@
 	connect_button: con_button
 	ping_label: ping_lbl
 	camera_box: camera_image
+	mode_button: mode_btn
+
     canvas.before:
         Color:
             rgb: 1, 1, 1
@@ -21,13 +23,15 @@
 				anchor_x: 'left'
 				anchor_y: 'top'
 				Button:
+					id: mode_btn
 					canvas:
 						Color:
 							rgba: 1,1,1,1
 						Line:
 							rectangle: self.x, self.y, self.width, self.height
 					background_color: 0,0,0,0
-					text:'Change mode to automatic'
+					text: 'Mode'
+					on_release: root.mode_button_click()
 					size_hint: .17, .65
 
 			AnchorLayout:
@@ -118,7 +122,7 @@
 				size_hint_x: 0.135
 				Slider:
 					id: spd_slider
-					on_touch_up: root.set_veliocity(self.value)
+					#on_touch_up: root.set_veliocity(self.value)
 					orientation: 'vertical'
 					min: 0
 					max: 100

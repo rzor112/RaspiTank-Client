@@ -110,7 +110,9 @@ class MainScreen(Screen):
     ping_label = ObjectProperty(None)
     camera_box = ObjectProperty(None)
     speed_slider = ObjectProperty(None)
+    mode_button = ObjectProperty(None)
 
+    auto_mode = False
     connected = False
     key_lock = [False, False, False, False]
     disconnect_camera_texture = Image(source = 'images/off_camera.png').texture
@@ -119,7 +121,7 @@ class MainScreen(Screen):
     def __init__(self, **kwargs):
         super(MainScreen, self).__init__(**kwargs)
         Clock.schedule_interval(self.ping, 1)
-        Clock.schedule_interval(self.camera, 1.0/100)
+        Clock.schedule_interval(self.camera, 1.0/150)
 
     def on_enter(self):
         self._keyboard = Window.request_keyboard(self._keyboard_closed, self)
@@ -246,6 +248,8 @@ class MainScreen(Screen):
                     self.connect_button.background_color = (1,0,0,1)
                     self.connect_button.text = 'DISCONNECT'
                     self.speed_slider.value = tcp_client.send(0xa0, 0x00)['value']
+                    self.auto_mode = tcp_client.send(0xa3, 0x00)['value']
+                    self.refresh_mode_button()
                     self.connected = True
                 except: 
                     error_pop = Error_pop()
@@ -255,6 +259,25 @@ class MainScreen(Screen):
                 error_pop = Error_pop()
                 error_pop.open()
                 error_pop.set_error_text("Can't open camera stream")
+
+    def refresh_mode_button(self):
+        if self.auto_mode:
+            self.mode_button.text = 'Change mode to manual'
+        else:
+            self.mode_button.text = 'Change mode to automatic'
+
+    def mode_button_click(self):
+        print 'click'
+        if tcp_client.connect:
+            self.auto_mode = not self.auto_mode
+            if self.auto_mode:
+                print 'set'
+                tcp_client.send(0x08, 0x00)
+            else:
+                print 'reset'
+                tcp_client.send(0x09, 0x00)
+            self.refresh_mode_button()
+            
 
     def settings(self):
         self.manager.current = 'screen_second'
