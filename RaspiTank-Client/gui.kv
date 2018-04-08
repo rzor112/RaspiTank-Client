@@ -121,8 +121,9 @@
 				orientation: 'vertical'
 				size_hint_x: 0.135
 				Slider:
+					size_hint_y: 0.5
 					id: spd_slider
-					#on_touch_up: root.set_veliocity(self.value)
+					on_touch_up: root.set_veliocity(self.value)
 					orientation: 'vertical'
 					min: 0
 					max: 100
