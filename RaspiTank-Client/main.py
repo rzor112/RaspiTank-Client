@@ -77,14 +77,16 @@ class Saved_Data():
         self.connection.commit()
 
 class TCP_Client():
-    TCP_IP = '192.168.0.113'
+    TCP_IP = '192.168.0.116'
     TCP_PORT = 5005
     BUFFER_SIZE = 1024
     connected = False
 
     def connect(self):
         self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.s.settimeout(1)
         self.s.connect((self.TCP_IP, self.TCP_PORT))
+        self.send(0xff, 0x00)
         self.connected = True
 
     def disconnect(self):
@@ -245,12 +247,13 @@ class MainScreen(Screen):
                 self.stream = urllib2.urlopen(self.address, timeout = 2)
                 try:
                     tcp_client.connect()
-                    self.connect_button.background_color = (1,0,0,1)
-                    self.connect_button.text = 'DISCONNECT'
-                    self.speed_slider.value = tcp_client.send(0xa0, 0x00)['value']
-                    self.auto_mode = tcp_client.send(0xa3, 0x00)['value']
-                    self.refresh_mode_button()
-                    self.connected = True
+                    if tcp_client.connected:
+                        self.connect_button.background_color = (1,0,0,1)
+                        self.connect_button.text = 'DISCONNECT'
+                        self.speed_slider.value = tcp_client.send(0xa0, 0x00)['value']
+                        self.auto_mode = tcp_client.send(0xa3, 0x00)['value']
+                        self.refresh_mode_button()
+                        self.connected = True
                 except: 
                     error_pop = Error_pop()
                     error_pop.open()
@@ -267,8 +270,7 @@ class MainScreen(Screen):
             self.mode_button.text = 'Change mode to automatic'
 
     def mode_button_click(self):
-        print 'click'
-        if tcp_client.connect:
+        if tcp_client.connected:
             self.auto_mode = not self.auto_mode
             if self.auto_mode:
                 print 'set'
